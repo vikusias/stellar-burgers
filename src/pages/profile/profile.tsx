@@ -1,61 +1,85 @@
+import { FC, SyntheticEvent, useEffect, useState, useCallback } from 'react';
+import { useDispatch, useSelector } from '../../services/store';
 import { ProfileUI } from '@ui-pages';
-import { FC, SyntheticEvent, useEffect, useState } from 'react';
+import { TRegisterData } from '@api';
+import { updateUserThunk } from '../../services/user/actions';
+import { selectUser } from '../../services/user/UserSlice';
 
 export const Profile: FC = () => {
   /** TODO: взять переменную из стора */
-  const user = {
-    name: '',
-    email: ''
-  };
+  const dispatch = useDispatch();
+  const user = useSelector(selectUser);
 
-  const [formValue, setFormValue] = useState({
-    name: user.name,
-    email: user.email,
+  const [formValue, setFormValue] = useState<Partial<TRegisterData>>({
+    name: '',
+    email: '',
     password: ''
   });
 
+  // Инициализация формы данными пользователя
   useEffect(() => {
-    setFormValue((prevState) => ({
-      ...prevState,
-      name: user?.name || '',
-      email: user?.email || ''
-    }));
+    if (user) {
+      setFormValue({
+        name: user.name,
+        email: user.email,
+        password: ''
+      });
+    }
   }, [user]);
 
-  const isFormChanged =
-    formValue.name !== user?.name ||
-    formValue.email !== user?.email ||
-    !!formValue.password;
+  // Проверка изменений в форме
+  const isFormChanged = useCallback(() => {
+    if (!user) return false;
+
+    return (
+      formValue.name !== user.name ||
+      formValue.email !== user.email ||
+      !!formValue.password
+    );
+  }, [formValue, user]);
 
   const handleSubmit = (e: SyntheticEvent) => {
     e.preventDefault();
+    if (isFormChanged() && user) {
+      dispatch(updateUserThunk(formValue));
+    }
   };
 
   const handleCancel = (e: SyntheticEvent) => {
     e.preventDefault();
-    setFormValue({
-      name: user.name,
-      email: user.email,
-      password: ''
-    });
+    if (user) {
+      setFormValue({
+        name: user.name,
+        email: user.email,
+        password: ''
+      });
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
     setFormValue((prevState) => ({
       ...prevState,
-      [e.target.name]: e.target.value
+      [name]: value
     }));
   };
 
+  // Если пользователь не загружен, не рендерим компонент
+  if (!user) {
+    return null;
+  }
+
   return (
     <ProfileUI
-      formValue={formValue}
-      isFormChanged={isFormChanged}
+      formValue={{
+        name: formValue.name || '',
+        email: formValue.email || '',
+        password: formValue.password || ''
+      }}
+      isFormChanged={isFormChanged()}
       handleCancel={handleCancel}
       handleSubmit={handleSubmit}
       handleInputChange={handleInputChange}
     />
   );
-
-  return null;
 };
