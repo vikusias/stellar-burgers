@@ -5,9 +5,9 @@ import {
   logoutUserThunk,
   registerUserThunk,
   setIsAuthChecked,
-  updateUserThunk
+  updateUserThunk,
+  checkUserAuth
 } from './actions';
-import { setCookie } from '../../utils/cookie';
 
 export interface UserState {
   user: TUser | null;
@@ -45,8 +45,6 @@ export const userSlice = createSlice({
       .addCase(registerUserThunk.fulfilled, (state, action) => {
         state.loading = false;
         state.user = action.payload.user;
-        setCookie('accessToken', action.payload.accessToken);
-        localStorage.setItem('refreshToken', action.payload.refreshToken);
         state.isAuthChecked = true;
       })
       .addCase(registerUserThunk.rejected, (state, action) => {
@@ -62,8 +60,6 @@ export const userSlice = createSlice({
       .addCase(loginUserThunk.fulfilled, (state, action) => {
         state.loading = false;
         state.user = action.payload.user;
-        setCookie('accessToken', action.payload.accessToken);
-        localStorage.setItem('refreshToken', action.payload.refreshToken);
         state.isAuthChecked = true;
       })
       .addCase(loginUserThunk.rejected, (state, action) => {
@@ -93,12 +89,27 @@ export const userSlice = createSlice({
       .addCase(logoutUserThunk.fulfilled, (state) => {
         state.loading = false;
         state.user = null;
-        setCookie('accessToken', '', { expires: -1 });
-        localStorage.removeItem('refreshToken');
       })
       .addCase(logoutUserThunk.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
+      })
+
+      // ------- CHECK USER AUTH -------
+      .addCase(checkUserAuth.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(checkUserAuth.fulfilled, (state, action) => {
+        state.loading = false;
+        state.user = action.payload.user;
+        state.isAuthChecked = true;
+      })
+      .addCase(checkUserAuth.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+        state.isAuthChecked = true;
+        state.user = null;
       });
   },
   selectors: {

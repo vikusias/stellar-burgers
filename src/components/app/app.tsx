@@ -37,14 +37,12 @@ const App = () => {
     navigate(-1);
   }, [navigate]);
 
-  // Авторизация пользователя
   useEffect(() => {
-    dispatch(checkUserAuth())
-      .then(() => dispatch(setIsAuthChecked(true)))
-      .catch(() => dispatch(setIsAuthChecked(true)));
+    dispatch(checkUserAuth()).finally(() => {
+      dispatch(setIsAuthChecked(true));
+    });
   }, [dispatch]);
 
-  // Загрузка ингредиентов
   useEffect(() => {
     if (!isIngredientsLoaded) {
       dispatch(getIngredientsThunk());
@@ -56,11 +54,9 @@ const App = () => {
       <AppHeader />
 
       <Routes location={backgroundLocation || location}>
-        {/* Основные маршруты */}
         <Route path='/' element={<ConstructorPage />} />
         <Route path='/feed' element={<Feed />} />
 
-        {/* Защищенные маршруты для авторизованных пользователей */}
         <Route
           path='/profile'
           element={
@@ -78,7 +74,6 @@ const App = () => {
           }
         />
 
-        {/* Маршруты для неавторизованных пользователей */}
         <Route
           path='/register'
           element={
@@ -112,7 +107,7 @@ const App = () => {
           }
         />
 
-        {/* Маршруты с параметрами для прямого доступа */}
+        {/* Добавляем прямые маршруты для заказов */}
         <Route path='/feed/:number' element={<OrderInfo />} />
         <Route path='/ingredients/:id' element={<IngredientDetails />} />
         <Route
@@ -124,17 +119,18 @@ const App = () => {
           }
         />
 
-        {/* Маршрут для неизвестных страниц */}
         <Route path='*' element={<NotFound404 />} />
       </Routes>
 
-      {/* Маршруты для модальных окон */}
       {backgroundLocation && (
         <Routes>
           <Route
             path='/feed/:number'
             element={
-              <Modal title='Детали заказа' onClose={onCloseModal}>
+              <Modal
+                title={`#${location.pathname.split('/').pop()?.padStart(6, '0')}`}
+                onClose={onCloseModal}
+              >
                 <OrderInfo />
               </Modal>
             }
@@ -153,7 +149,10 @@ const App = () => {
             path='/profile/orders/:number'
             element={
               <ProtectedRoute>
-                <Modal title='Детали заказа' onClose={onCloseModal}>
+                <Modal
+                  title={`#${location.pathname.split('/').pop()?.padStart(6, '0')}`}
+                  onClose={onCloseModal}
+                >
                   <OrderInfo />
                 </Modal>
               </ProtectedRoute>

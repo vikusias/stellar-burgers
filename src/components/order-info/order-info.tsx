@@ -1,28 +1,29 @@
 import { FC, useEffect, useMemo } from 'react';
-import { useParams } from 'react-router-dom';
-import { useDispatch, useSelector } from '../../services/store';
 import { Preloader } from '../ui/preloader';
 import { OrderInfoUI } from '../ui/order-info';
 import { TIngredient } from '@utils-types';
+import { useDispatch, useSelector } from '../../services/store';
 import { selectIngredients } from '../../services/ingredients/IngredientsSlice';
+import { useParams } from 'react-router-dom';
 import { selectOrderByNumber } from '../../services/orders/OrdersSlice';
 import { getOrderByNumberThunk } from '../../services/orders/actions';
 
+// Компонент для отображения деталей заказа в модальном окне
+// Используется при клике на заказ в ленте заказов
 export const OrderInfo: FC = () => {
   const { number } = useParams<{ number: string }>();
   const orderNumber = Number(number);
-  const dispatch = useDispatch();
 
   const orderData = useSelector(selectOrderByNumber);
-  const ingredients: TIngredient[] = useSelector(selectIngredients);
+
+  const dispatch = useDispatch();
 
   useEffect(() => {
-    if (orderNumber) {
-      dispatch(getOrderByNumberThunk(orderNumber));
-    }
-  }, [dispatch, orderNumber]);
+    dispatch(getOrderByNumberThunk(orderNumber));
+  }, []);
 
-  /* Готовим данные для отображения */
+  const ingredients: TIngredient[] = useSelector(selectIngredients);
+
   const orderInfo = useMemo(() => {
     if (!orderData || !ingredients.length) return null;
 
@@ -32,21 +33,19 @@ export const OrderInfo: FC = () => {
       [key: string]: TIngredient & { count: number };
     };
 
-    // Создаем объект с информацией об ингредиентах и их количестве
+    // Преобразуем массив ID ингредиентов в объект с информацией о каждом ингредиенте
     const ingredientsInfo = orderData.ingredients.reduce(
-      (acc: TIngredientsWithCount, ingredientId) => {
-        if (!acc[ingredientId]) {
-          const ingredient = ingredients.find(
-            (ing) => ing._id === ingredientId
-          );
+      (acc: TIngredientsWithCount, item) => {
+        if (!acc[item]) {
+          const ingredient = ingredients.find((ing) => ing._id === item);
           if (ingredient) {
-            acc[ingredientId] = {
+            acc[item] = {
               ...ingredient,
               count: 1
             };
           }
         } else {
-          acc[ingredientId].count++;
+          acc[item].count++;
         }
 
         return acc;
@@ -54,13 +53,12 @@ export const OrderInfo: FC = () => {
       {}
     );
 
-    // Вычисляем общую стоимость заказа
     const total = Object.values(ingredientsInfo).reduce(
-      (sum, item) => sum + item.price * item.count,
+      (acc, item) => acc + item.price * item.count,
       0
     );
 
-    // Возвращаем полную информацию о заказе
+    // Возвращаем структурированные данные заказа
     return {
       ...orderData,
       ingredientsInfo,
@@ -69,9 +67,11 @@ export const OrderInfo: FC = () => {
     };
   }, [orderData, ingredients]);
 
+  // Если данные еще не загружены, показываем прелоадер
   if (!orderInfo) {
     return <Preloader />;
   }
 
+  // Рендерим UI компонент с подготовленной информацией
   return <OrderInfoUI orderInfo={orderInfo} />;
 };
