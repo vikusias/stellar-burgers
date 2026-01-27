@@ -92,6 +92,10 @@
   fill: #8585ad;
 }
 
+.logoIcon {
+  display: block;
+}
+
 /* Медиа-запросы для адаптивности */
 @media (max-width: 1280px) {
   .container {

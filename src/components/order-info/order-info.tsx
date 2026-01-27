@@ -15,12 +15,14 @@ export const OrderInfo: FC = () => {
   const orderNumber = Number(number);
 
   const orderData = useSelector(selectOrderByNumber);
-
   const dispatch = useDispatch();
 
   useEffect(() => {
-    dispatch(getOrderByNumberThunk(orderNumber));
-  }, []);
+    // Проверяем, что orderNumber валидный перед вызовом
+    if (orderNumber) {
+      dispatch(getOrderByNumberThunk(orderNumber));
+    }
+  }, [dispatch, orderNumber]); // Добавила orderNumber в зависимости
 
   const ingredients: TIngredient[] = useSelector(selectIngredients);
 
@@ -58,12 +60,42 @@ export const OrderInfo: FC = () => {
       0
     );
 
-    // Возвращаем структурированные данные заказа
+    // Функция для преобразования статуса в читаемый текст
+    const getStatusText = (status: string): string => {
+      switch (status) {
+        case 'done':
+          return 'Выполнен';
+        case 'pending':
+          return 'Готовится';
+        case 'created':
+          return 'Создан';
+        default:
+          return status;
+      }
+    };
+
+    // Функция для получения класса цвета статуса
+    const getStatusColorClass = (status: string): string => {
+      switch (status) {
+        case 'done':
+          return 'text_color_success'; // Класс для зеленого цвета (#00CCCC)
+        case 'pending':
+        case 'created':
+          return 'text_color_primary'; // Класс для обычного цвета
+        default:
+          return '';
+      }
+    };
+
+    // Возвращаем структурированные данные заказа с добавлением статуса
     return {
       ...orderData,
       ingredientsInfo,
       date,
-      total
+      total,
+      // Добавляем преобразованный текст статуса и класс для цвета
+      statusText: getStatusText(orderData.status),
+      statusColorClass: getStatusColorClass(orderData.status)
     };
   }, [orderData, ingredients]);
 
