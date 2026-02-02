@@ -1,32 +1,37 @@
-import { useState, useRef, useEffect, FC } from 'react';
+import { useState, useRef, useEffect, FC, useMemo, useCallback } from 'react';
 import { useInView } from 'react-intersection-observer';
-
-import { TTabMode } from '@utils-types';
+import { TIngredient, TTabMode } from '@utils-types';
 import { BurgerIngredientsUI } from '../ui/burger-ingredients';
+import { useSelector } from '../../services/store';
+import { selectIngredients } from '../../services/ingredients/IngredientsSlice';
 
 export const BurgerIngredients: FC = () => {
-  /** TODO: взять переменные из стора */
-  const buns = [];
-  const mains = [];
-  const sauces = [];
+  const ingredients: TIngredient[] = useSelector(selectIngredients);
+
+  // Фильтрация ингредиентов по категориям с использованием useMemo
+  const { buns, mains, sauces } = useMemo(() => {
+    const buns = ingredients.filter((ing: TIngredient) => ing.type === 'bun');
+    const mains = ingredients.filter((ing: TIngredient) => ing.type === 'main');
+    const sauces = ingredients.filter(
+      (ing: TIngredient) => ing.type === 'sauce'
+    );
+
+    return { buns, mains, sauces };
+  }, [ingredients]);
 
   const [currentTab, setCurrentTab] = useState<TTabMode>('bun');
+
+  // Рефы для заголовков категорий
   const titleBunRef = useRef<HTMLHeadingElement>(null);
   const titleMainRef = useRef<HTMLHeadingElement>(null);
   const titleSaucesRef = useRef<HTMLHeadingElement>(null);
 
-  const [bunsRef, inViewBuns] = useInView({
-    threshold: 0
-  });
+  // Наблюдатели за видимостью категорий
+  const [bunsRef, inViewBuns] = useInView({ threshold: 0 });
+  const [mainsRef, inViewFilling] = useInView({ threshold: 0 });
+  const [saucesRef, inViewSauces] = useInView({ threshold: 0 });
 
-  const [mainsRef, inViewFilling] = useInView({
-    threshold: 0
-  });
-
-  const [saucesRef, inViewSauces] = useInView({
-    threshold: 0
-  });
-
+  // Обновление активной вкладки при скролле
   useEffect(() => {
     if (inViewBuns) {
       setCurrentTab('bun');
@@ -37,17 +42,23 @@ export const BurgerIngredients: FC = () => {
     }
   }, [inViewBuns, inViewFilling, inViewSauces]);
 
-  const onTabClick = (tab: string) => {
-    setCurrentTab(tab as TTabMode);
-    if (tab === 'bun')
-      titleBunRef.current?.scrollIntoView({ behavior: 'smooth' });
-    if (tab === 'main')
-      titleMainRef.current?.scrollIntoView({ behavior: 'smooth' });
-    if (tab === 'sauce')
-      titleSaucesRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  // Обработчик клика по вкладке
+  const handleTabClick = useCallback((tab: string) => {
+    const tabMode = tab as TTabMode;
+    setCurrentTab(tabMode);
 
-  return null;
+    // Прокрутка к соответствующей категории
+    const refMap = {
+      bun: titleBunRef,
+      main: titleMainRef,
+      sauce: titleSaucesRef
+    };
+
+    const currentRef = refMap[tabMode];
+    if (currentRef?.current) {
+      currentRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, []);
 
   return (
     <BurgerIngredientsUI
@@ -61,7 +72,7 @@ export const BurgerIngredients: FC = () => {
       bunsRef={bunsRef}
       mainsRef={mainsRef}
       saucesRef={saucesRef}
-      onTabClick={onTabClick}
+      onTabClick={handleTabClick}
     />
   );
 };

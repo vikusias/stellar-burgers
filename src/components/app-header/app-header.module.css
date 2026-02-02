@@ -1,0 +1,114 @@
+/* Основной контейнер шапки */
+.header {
+  background-color: #1c1c21;
+  box-shadow:
+    0px 24px 32px rgba(0, 0, 0, 0.04),
+    0px 16px 24px rgba(0, 0, 0, 0.04),
+    0px 4px 8px rgba(0, 0, 0, 0.04),
+    0px 0px 1px rgba(0, 0, 0, 0.04);
+  width: 100%;
+}
+
+/* Контейнер с фиксированной шириной */
+.container {
+  max-width: 1280px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  padding: 16px 0;
+}
+
+/* Навигационная панель - левая часть */
+.nav {
+  display: flex;
+  align-items: center;
+}
+
+/* Секция навигации */
+.navSection {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Стили для ссылок */
+.link {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  color: #8585ad;
+  padding: 16px 20px;
+  border-radius: 40px;
+  transition: all 0.3s ease;
+}
+
+.link:hover {
+  color: #f2f2f3;
+  background-color: rgba(133, 133, 173, 0.1);
+}
+
+/* Активное состояние ссылки */
+.linkActive {
+  color: #f2f2f3;
+}
+
+/* Логотип по центру */
+.logo {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Текст ссылки */
+.linkText {
+  margin-left: 8px;
+}
+
+/* Иконки */
+.icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Контейнер для личного кабинета */
+.profileSection {
+  display: flex;
+  align-items: center;
+}
+
+/* Классы для состояний иконок */
+.iconPrimary {
+  fill: #f2f2f3;
+}
+
+.iconSecondary {
+  fill: #8585ad;
+}
+
+.logoIcon {
+  display: block;
+}
+
+/* Медиа-запросы для адаптивности */
+@media (max-width: 1280px) {
+  .container {
+    padding: 16px 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .linkText {
+    display: none;
+  }
+
+  .link {
+    padding: 12px 16px;
+  }
+}

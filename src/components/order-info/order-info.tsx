@@ -1,23 +1,31 @@
-import { FC, useMemo } from 'react';
+import { FC, useEffect, useMemo } from 'react';
 import { Preloader } from '../ui/preloader';
 import { OrderInfoUI } from '../ui/order-info';
 import { TIngredient } from '@utils-types';
+import { useDispatch, useSelector } from '../../services/store';
+import { selectIngredients } from '../../services/ingredients/IngredientsSlice';
+import { useParams } from 'react-router-dom';
+import { selectOrderByNumber } from '../../services/orders/OrdersSlice';
+import { getOrderByNumberThunk } from '../../services/orders/actions';
 
+// Компонент для отображения деталей заказа в модальном окне
+// Используется при клике на заказ в ленте заказов
 export const OrderInfo: FC = () => {
-  /** TODO: взять переменные orderData и ingredients из стора */
-  const orderData = {
-    createdAt: '',
-    ingredients: [],
-    _id: '',
-    status: '',
-    name: '',
-    updatedAt: 'string',
-    number: 0
-  };
+  const { number } = useParams<{ number: string }>();
+  const orderNumber = Number(number);
 
-  const ingredients: TIngredient[] = [];
+  const orderData = useSelector(selectOrderByNumber);
+  const dispatch = useDispatch();
 
-  /* Готовим данные для отображения */
+  useEffect(() => {
+    // Проверяем, что orderNumber валидный перед вызовом
+    if (orderNumber) {
+      dispatch(getOrderByNumberThunk(orderNumber));
+    }
+  }, [dispatch, orderNumber]); // Добавила orderNumber в зависимости
+
+  const ingredients: TIngredient[] = useSelector(selectIngredients);
+
   const orderInfo = useMemo(() => {
     if (!orderData || !ingredients.length) return null;
 
@@ -27,6 +35,7 @@ export const OrderInfo: FC = () => {
       [key: string]: TIngredient & { count: number };
     };
 
+    // Преобразуем массив ID ингредиентов в объект с информацией о каждом ингредиенте
     const ingredientsInfo = orderData.ingredients.reduce(
       (acc: TIngredientsWithCount, item) => {
         if (!acc[item]) {
@@ -51,17 +60,50 @@ export const OrderInfo: FC = () => {
       0
     );
 
+    // Функция для преобразования статуса в читаемый текст
+    const getStatusText = (status: string): string => {
+      switch (status) {
+        case 'done':
+          return 'Выполнен';
+        case 'pending':
+          return 'Готовится';
+        case 'created':
+          return 'Создан';
+        default:
+          return status;
+      }
+    };
+
+    // Функция для получения класса цвета статуса
+    const getStatusColorClass = (status: string): string => {
+      switch (status) {
+        case 'done':
+          return 'text_color_success'; // Класс для зеленого цвета (#00CCCC)
+        case 'pending':
+        case 'created':
+          return 'text_color_primary'; // Класс для обычного цвета
+        default:
+          return '';
+      }
+    };
+
+    // Возвращаем структурированные данные заказа с добавлением статуса
     return {
       ...orderData,
       ingredientsInfo,
       date,
-      total
+      total,
+      // Добавляем преобразованный текст статуса и класс для цвета
+      statusText: getStatusText(orderData.status),
+      statusColorClass: getStatusColorClass(orderData.status)
     };
   }, [orderData, ingredients]);
 
+  // Если данные еще не загружены, показываем прелоадер
   if (!orderInfo) {
     return <Preloader />;
   }
 
+  // Рендерим UI компонент с подготовленной информацией
   return <OrderInfoUI orderInfo={orderInfo} />;
 };
