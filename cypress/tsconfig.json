@@ -1,0 +1,16 @@
+{
+  // Наследуем базовые настройки из корневого tsconfig
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    // Отключаем генерацию файлов — только проверка типов
+    "noEmit": true,
+    // Используем только типы Cypress, чтобы избежать конфликтов с Jest
+    "types": ["cypress"]
+  },
+  "include": [
+    // Подключаем типы Cypress из node_modules
+    "../node_modules/cypress",
+    // Все TypeScript файлы в папке cypress
+    "./**/*.ts"
+  ]
+}
