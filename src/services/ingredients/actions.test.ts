@@ -14,8 +14,10 @@ describe('getIngredientsThunk', () => {
   it('успешный запрос должен вернуть данные', async () => {
     jest.spyOn(api, 'getIngredientsApi').mockResolvedValue(testIngredients);
 
-    await thunk(dispatch, () => ({}), undefined);
+    const result = await thunk(dispatch, () => ({}), undefined);
 
+    expect(result.payload).toEqual(testIngredients);
+    expect(result.type.endsWith('/fulfilled')).toBe(true);
     expect(dispatch).toHaveBeenCalledTimes(2);
     expect(dispatch).toHaveBeenCalledWith(
       expect.objectContaining({ type: getIngredientsThunk.pending.type })
@@ -33,8 +35,10 @@ describe('getIngredientsThunk', () => {
       .spyOn(api, 'getIngredientsApi')
       .mockRejectedValue(new Error('API error'));
 
-    await thunk(dispatch, () => ({}), undefined);
+    const result = await thunk(dispatch, () => ({}), undefined);
 
+    expect(result.payload).toBe('API error');
+    expect(result.type.endsWith('/rejected')).toBe(true);
     expect(dispatch).toHaveBeenCalledTimes(2);
     expect(dispatch).toHaveBeenCalledWith(
       expect.objectContaining({ type: getIngredientsThunk.pending.type })
@@ -48,11 +52,12 @@ describe('getIngredientsThunk', () => {
   });
 
   it('ошибка (не Error) должна вернуть rejectWithValue с сообщением по умолчанию', async () => {
-    // Например, API выбросило строку
     jest.spyOn(api, 'getIngredientsApi').mockRejectedValue('Строка ошибки');
 
-    await thunk(dispatch, () => ({}), undefined);
+    const result = await thunk(dispatch, () => ({}), undefined);
 
+    expect(result.payload).toBe('Не удалось загрузить список ингредиентов');
+    expect(result.type.endsWith('/rejected')).toBe(true);
     expect(dispatch).toHaveBeenCalledTimes(2);
     expect(dispatch).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -60,5 +65,14 @@ describe('getIngredientsThunk', () => {
         payload: 'Не удалось загрузить список ингредиентов'
       })
     );
+  });
+
+  it('успешный запрос с пустым массивом должен вернуть пустой массив', async () => {
+    jest.spyOn(api, 'getIngredientsApi').mockResolvedValue([]);
+
+    const result = await thunk(dispatch, () => ({}), undefined);
+
+    expect(result.payload).toEqual([]);
+    expect(result.type.endsWith('/fulfilled')).toBe(true);
   });
 });
