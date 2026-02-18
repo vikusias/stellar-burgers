@@ -2,7 +2,7 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { TIngredient } from '../../utils/types';
 import { getIngredientsThunk } from '../ingredients/actions';
 
-interface IngredientsState {
+export interface IngredientsState {
   ingredients: TIngredient[];
   loading: boolean;
   error: string | null;
@@ -33,7 +33,9 @@ export const ingredientsSlice = createSlice({
       )
       .addCase(getIngredientsThunk.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload as string;
+        state.error = action.payload
+          ? (action.payload as string)
+          : 'Неизвестная ошибка';
       });
   },
   selectors: {
@@ -43,6 +45,7 @@ export const ingredientsSlice = createSlice({
   }
 });
 
+// Экспортируем селекторы как есть — они автоматически типизированы для корневого состояния
 export const {
   selectIngredients,
   selectIngredientsLoading,
